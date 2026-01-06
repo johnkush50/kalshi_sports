@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kalshi Live Market Viewer
 
-## Getting Started
+A read-only dashboard for viewing Kalshi live market data for sports events.
 
-First, run the development server:
+## Features
+
+- **Event Ticker Input**: Enter a Kalshi event ticker (e.g., `kxnflgame-26jan04balpit`)
+- **Live Streaming**: Real-time market data via WebSocket → SSE proxy
+- **Markets Table**: Sortable table with live prices, volume, and open interest
+- **Raw Feed**: Filterable message feed showing ticker, orderbook, and trade updates
+- **Auth Fallback**: Optional API key authentication if WebSocket requires it
+
+## Quick Start
 
 ```bash
+# Install dependencies
+npm install
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create a `.env.local` file (optional):
 
-## Learn More
+```bash
+# Environment: "prod" or "demo" (default: "prod")
+KALSHI_ENV=prod
 
-To learn more about Next.js, take a look at the following resources:
+# OPTIONAL: Only needed if WebSocket requires authentication
+KALSHI_ACCESS_KEY=your-access-key
+KALSHI_PRIVATE_KEY_PEM="-----BEGIN RSA PRIVATE KEY-----\n..."
+# OR
+KALSHI_PRIVATE_KEY_PATH=/path/to/private-key.pem
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Architecture
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+Browser (React) ←── SSE ──→ Next.js API ←── WebSocket ──→ Kalshi API
+```
 
-## Deploy on Vercel
+1. User enters event ticker and clicks Connect
+2. Server fetches event details via REST API to get market tickers
+3. Server opens WebSocket to Kalshi and subscribes to channels
+4. Server streams updates to browser via Server-Sent Events (SSE)
+5. UI displays live market data in real-time
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## API Endpoints
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Endpoint | Description |
+|----------|-------------|
+| `GET /api/stream?eventTicker=...` | SSE stream for live market data |
+
+## Kalshi Documentation
+
+- [Quick Start: Market Data](https://docs.kalshi.com/getting_started/quick_start_market_data)
+- [Quick Start: WebSockets](https://docs.kalshi.com/getting_started/quick_start_websockets)
+- [WebSocket Connection](https://docs.kalshi.com/websockets/websocket-connection)
+- [Get Event](https://docs.kalshi.com/api-reference/events/get-event)
+
+## Security Notes
+
+- **Read-only only** - No trading, no order placement
+- **No private key in browser** - All sensitive operations happen server-side
+- WebSocket connections are proxied through the server
+
+## Known Limitations
+
+- WebSocket may require API key authentication (fallback mode available)
+- Large events with many markets are capped at 50 for performance
+- This is a read-only viewer - no trading capabilities
